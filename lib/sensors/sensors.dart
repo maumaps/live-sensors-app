@@ -17,19 +17,25 @@ class SensorEvent<T> {
 
 class Sensors {
   final Logger logger = Logger();
-  final List<Stream> _sensors = <Stream>[
-    userAccelerometerEvents.map((event) => SensorEvent(event, DateTime.now())),
-    gyroscopeEvents.map((event) => SensorEvent(event, DateTime.now())),
-    magnetometerEvents.map((event) => SensorEvent(event, DateTime.now())),
+  final List<Stream<Object>> _sensors = <Stream<Object>>[
+    userAccelerometerEvents.map(
+      (event) => SensorEvent<UserAccelerometerEvent>(event, DateTime.now()),
+    ),
+    gyroscopeEvents.map(
+      (event) => SensorEvent<GyroscopeEvent>(event, DateTime.now()),
+    ),
+    magnetometerEvents.map(
+      (event) => SensorEvent<MagnetometerEvent>(event, DateTime.now()),
+    ),
   ];
   late Stream<SensorsData> stream;
 
   Sensors() {
-    stream = StreamZip(_sensors).map(
-      (List event) => (
-        event[0],
-        event[1],
-        event[2],
+    stream = StreamZip<Object>(_sensors).map(
+      (List<Object> event) => (
+        event[0] as SensorEvent<UserAccelerometerEvent>,
+        event[1] as SensorEvent<GyroscopeEvent>,
+        event[2] as SensorEvent<MagnetometerEvent>,
       ),
     );
   }

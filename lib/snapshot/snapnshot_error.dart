@@ -28,15 +28,25 @@ class SnapshotError {
 
   factory SnapshotError.fromMap(Map<String, dynamic> json) {
     return SnapshotError(
-      json['type'] as SnapshotErrorType,
+      _typeFromJson(json['type']),
       json['message'] as String,
       json['temporary'] as bool,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'type': type,
+        'type': type.name,
         'message': message,
         'temporary': temporary,
       };
+}
+
+SnapshotErrorType _typeFromJson(dynamic value) {
+  if (value is SnapshotErrorType) {
+    return value;
+  }
+  return SnapshotErrorType.values.firstWhere(
+    (type) => type.name == value,
+    orElse: () => SnapshotErrorType.unknown,
+  );
 }

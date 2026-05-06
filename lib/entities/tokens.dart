@@ -15,11 +15,11 @@ class Tokens {
 
   factory Tokens.fromJson(Map<String, dynamic> json) {
     return Tokens(
-      sessionId: json['sessionId'],
-      accessToken: json['accessToken'],
-      refreshToken: json['refreshToken'],
-      expiresIn: json['expiresIn'],
-      refreshExpiresIn: json['refreshExpiresIn'],
+      sessionId: json['sessionId'] as String,
+      accessToken: json['accessToken'] as String,
+      refreshToken: json['refreshToken'] as String,
+      expiresIn: json['expiresIn'] as int,
+      refreshExpiresIn: json['refreshExpiresIn'] as int,
     );
   }
 

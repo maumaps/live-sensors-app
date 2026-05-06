@@ -21,14 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: zulu
           java-version: "17"
-          cache: gradle
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -47,12 +46,12 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: zulu
           java-version: "17"
@@ -65,10 +64,19 @@ jobs:
           channel: stable
 
       - name: Build APK
+        env:
+          MAUMAPS_ALLOW_DEBUG_RELEASE_SIGNING: "true"
+          LIVE_SENSORS_API_URL: ${{ vars.LIVE_SENSORS_API_URL || 'https://example.test/live-sensor' }}
+          LIVE_SENSORS_OPENID_TOKEN_URL: ${{ vars.LIVE_SENSORS_OPENID_TOKEN_URL || 'https://example.test/token' }}
+          LIVE_SENSORS_OPENID_CLIENT_ID: ${{ vars.LIVE_SENSORS_OPENID_CLIENT_ID || 'maumaps_live_sensors' }}
+          LIVE_SENSORS_MQTT_LOGS_ENABLED: ${{ vars.LIVE_SENSORS_MQTT_LOGS_ENABLED || 'false' }}
+          LIVE_SENSORS_MQTT_ENDPOINT: ${{ vars.LIVE_SENSORS_MQTT_ENDPOINT || '' }}
+          LIVE_SENSORS_MQTT_PORT: ${{ vars.LIVE_SENSORS_MQTT_PORT || '' }}
+          LIVE_SENSORS_MQTT_TOPIC: ${{ vars.LIVE_SENSORS_MQTT_TOPIC || '' }}
         run: make build-apk
 
       - name: Upload Android artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: android-release
           path: build/app/outputs/flutter-apk/app-release.apk

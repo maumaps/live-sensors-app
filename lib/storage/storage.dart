@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/widgets.dart';
 import 'package:live_sensors/snapshot/snapshot.dart';
 import 'package:path/path.dart';
@@ -16,16 +18,20 @@ class Storage {
     WidgetsFlutterBinding.ensureInitialized();
     database = openDatabase(
       join(await getDatabasesPath(), dbName),
-      // When the database is first created, create a table to store dogs.
-      onCreate: (db, version) {
-        // Run the CREATE TABLE statement on the database.
-        return db.execute(
-          'CREATE TABLE dogs(id INTEGER PRIMARY KEY, name TEXT, age INTEGER)',
-        );
-      },
-      // Set the version. This executes the onCreate function and provides a
-      // path to perform database upgrades and downgrades.
-      version: 1,
+      onCreate: (db, version) => _createSnapshotsTable(db),
+      onUpgrade: (db, oldVersion, newVersion) => _createSnapshotsTable(db),
+      onOpen: (db) => _createSnapshotsTable(db),
+      version: 2,
+    );
+  }
+
+  Future<void> _createSnapshotsTable(Database db) {
+    return db.execute(
+      'CREATE TABLE IF NOT EXISTS snapshots('
+      'id TEXT PRIMARY KEY, '
+      'created_at INTEGER NOT NULL, '
+      'payload TEXT NOT NULL'
+      ')',
     );
   }
 
@@ -34,11 +40,12 @@ class Storage {
 
     await db.insert(
       'snapshots',
-      snapshot.toJson(),
-      // specify the `conflictAlgorithm` to use
-      // in case the same entry is inserted twice.
-      conflictAlgorithm:
-          ConflictAlgorithm.replace, // replace any previous data.
+      {
+        'id': snapshot.id,
+        'created_at': snapshot.startDateTime.millisecondsSinceEpoch,
+        'payload': jsonEncode(snapshot.toJson()),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
@@ -54,6 +61,36 @@ class Storage {
   }
 
   Future<Snapshot> next() async {
-    throw UnimplementedError('Persistent snapshot replay is not implemented');
+    final db = await database;
+
+    while (true) {
+      final rows = await db.query(
+        'snapshots',
+        orderBy: 'created_at ASC, id ASC',
+        limit: 1,
+      );
+
+      if (rows.isEmpty) {
+        throw StateError('No stored snapshots');
+      }
+
+      final row = rows.first;
+      final id = row['id'] as String;
+
+      try {
+        return Snapshot.fromJson(
+          jsonDecode(row['payload'] as String) as Map<String, dynamic>,
+        );
+      } catch (e) {
+        logger.error(
+          'Drop invalid stored snapshot $id.\n Reason: $e',
+        );
+        await db.delete(
+          'snapshots',
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      }
+    }
   }
 }

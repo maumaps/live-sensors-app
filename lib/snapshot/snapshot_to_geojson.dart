@@ -65,6 +65,8 @@ turf.FeatureCollection snapshotToGeoJson(Snapshot snapshot) {
       'gyroTime': snapshot.gyroscope.timestamp
           .map((t) => t.millisecondsSinceEpoch)
           .toList(),
+      'fidelity': snapshot.fidelityObservation?.toJson(),
+      'fidelityGeolocate': snapshot.fidelityObservation?.toGeolocateJson(),
     },
   );
 

@@ -74,7 +74,7 @@ class BaseFlowGeolocator implements GeoLocator {
   });
 
   @override
-  requestPermissions() async {
+  Future<void> requestPermissions() async {
     _logger.info('Requesting permissions');
     base_flow.Position position = await requestLocationPermission();
     _logger.info('Permission granted');
@@ -163,7 +163,7 @@ class BaseFlowGeolocator implements GeoLocator {
   }
 
   bool _positionStreamConnected = false;
-  _connectToPositionStream() {
+  void _connectToPositionStream() {
     if (!_positionStreamConnected) {
       _positionStream = base_flow.Geolocator.getPositionStream(
         locationSettings: _locationSettings,
@@ -174,7 +174,7 @@ class BaseFlowGeolocator implements GeoLocator {
   }
 
   bool _statusStreamConnected = false;
-  _connectToStatusStream() {
+  void _connectToStatusStream() {
     if (!_statusStreamConnected) {
       _statusStream = base_flow.Geolocator.getServiceStatusStream();
       // statusStream.pipe(_statusStreamController);

@@ -1,5 +1,5 @@
 class SimpleState<S> {
-  final List<Function> _listeners = <Function>[];
+  final List<void Function(S)> _listeners = <void Function(S)>[];
   late S state;
 
   SimpleState() {
@@ -10,18 +10,18 @@ class SimpleState<S> {
     return state;
   }
 
-  setState(update) {
+  void setState(void Function() update) {
     update();
     _notify();
   }
 
-  _notify() {
+  void _notify() {
     for (final listener in _listeners) {
       listener(state);
     }
   }
 
-  Function subscribe(void Function(S) listener) {
+  void Function() subscribe(void Function(S) listener) {
     _listeners.add(listener);
     Future(() => listener(state));
     return () {

@@ -11,10 +11,10 @@ class ToggleTrackingBtn extends StatefulWidget {
 
 class _ToggleTrackingBtnState extends State<ToggleTrackingBtn> {
   bool isTracking = false;
-  late Function _unsubscribe;
+  late void Function() _unsubscribe;
 
   @override
-  initState() {
+  void initState() {
     super.initState();
     _unsubscribe = widget.controller.subscribe((newState) {
       setState(() {
@@ -29,7 +29,7 @@ class _ToggleTrackingBtnState extends State<ToggleTrackingBtn> {
     super.dispose();
   }
 
-  toggleTracking() {
+  void toggleTracking() {
     if (isTracking) {
       widget.controller.pause();
     } else {

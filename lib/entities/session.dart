@@ -8,7 +8,8 @@ class Session {
   factory Session.fromJson(Map<String, dynamic> json) {
     final tokenJson = json['tokens'];
     return Session(
-      tokens: tokenJson == null ? null : Tokens.fromJson(tokenJson),
+      tokens:
+          tokenJson is Map<String, dynamic> ? Tokens.fromJson(tokenJson) : null,
     );
   }
 

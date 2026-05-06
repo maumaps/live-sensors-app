@@ -20,14 +20,14 @@ class CallPerSecMeasure {
     return _history.mean;
   }
 
-  _add(record) {
+  void _add(num record) {
     if (_history.length > _maxHistLength) {
       _history.removeAt(0);
     }
     _history.add(record);
   }
 
-  tick() {
+  void tick() {
     _counter += 1;
   }
 }

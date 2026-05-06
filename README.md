@@ -5,9 +5,8 @@ sending them to the live-sensor backend.
 
 This repository is the Maumaps fork of
 [`konturio/live-sensors-app`](https://github.com/konturio/live-sensors-app).
-The Android/iOS package identifiers are still the original `kontur.io.*`
-identifiers so existing installations can be upgraded while the fork is being
-stabilized.
+The Android/iOS package identifiers use Maumaps IDs; legacy Kontur backend
+compatibility must be supplied explicitly through build-time configuration.
 
 ## Development
 
@@ -32,13 +31,29 @@ Repository have set of scripts that helps build, test, and release app.
 ```
 flutter pub get
 make precommit
-make build-apk
+LIVE_SENSORS_API_URL=https://example.test/live-sensor \
+LIVE_SENSORS_OPENID_TOKEN_URL=https://example.test/token \
+LIVE_SENSORS_OPENID_CLIENT_ID=maumaps_live_sensors \
+  make build-apk
 ```
 
 `./scripts/build.sh` creates
 `releases/live-sensors-<version>-release.apk`.
 For tagged builds the version comes from the tag name.
 For local builds it comes from `git describe`.
+
+Runtime endpoints are required build configuration:
+
+```
+flutter build apk --release \
+  --dart-define=LIVE_SENSORS_API_URL=https://example.test/live-sensor \
+  --dart-define=LIVE_SENSORS_OPENID_TOKEN_URL=https://example.test/token \
+  --dart-define=LIVE_SENSORS_OPENID_CLIENT_ID=maumaps_live_sensors
+```
+
+Remote MQTT app logs are disabled unless
+`LIVE_SENSORS_MQTT_LOGS_ENABLED=true` and `LIVE_SENSORS_MQTT_ENDPOINT` are
+provided.
 
 ## Continuous integration
 
@@ -84,6 +99,8 @@ Contain all sensors records during period of time
 
 - Listens to sensors and fills snapshots with sensor data
 - listens to gps channel and create new snapshot on every position change
+- enriches finalized snapshots with fidelity-compatible GPS, Wi-Fi, cell tower,
+  and BLE observations when the platform exposes radio scan results
 - Adding new snapshots to `queue`
 
 ### Sender
@@ -96,9 +113,11 @@ Sending snapshots from `queue` to backend
 Sensors + GPS ---(data)--> Tracker ---(Snapshot)--> Queue --> Sender --> Client --> Backend
 ```
 
+See [docs/fidelity-observations.md](docs/fidelity-observations.md) for the
+radio observation payload shape.
 See [docs/application-flow.md](docs/application-flow.md) for a fuller
 contributor-oriented walkthrough of startup, login, tracking, sending, offline
-behavior, and mobile permissions.
+replay, and mobile permissions.
 
 ## Current backlog
 

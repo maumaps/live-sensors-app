@@ -11,6 +11,7 @@ void main() {
       () async {
     final api = OpenIdApi(
       refreshPath: Uri.parse(tokenEndpoint),
+      clientId: 'test-client',
       client: MockClient((request) async {
         return http.Response(
           '{"error":"invalid_grant","error_description":"Session not active"}',
@@ -35,6 +36,7 @@ void main() {
   test('refreshTokens preserves session on transport failure', () async {
     final api = OpenIdApi(
       refreshPath: Uri.parse(tokenEndpoint),
+      clientId: 'test-client',
       client: MockClient((request) async {
         throw http.ClientException('offline', request.url);
       }),

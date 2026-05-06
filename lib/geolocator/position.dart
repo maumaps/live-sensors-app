@@ -111,7 +111,8 @@ class Position {
 
   /// Converts the supplied [Map] to an instance of the [Position] class.
   static Position fromMap(dynamic message) {
-    final Map<dynamic, dynamic> positionMap = message;
+    final Map<dynamic, dynamic> positionMap =
+        Map<dynamic, dynamic>.from(message as Map<dynamic, dynamic>);
 
     if (!positionMap.containsKey('latitude')) {
       throw ArgumentError.value(
@@ -131,22 +132,22 @@ class Position {
 
     final timestamp = positionMap['timestamp'] != null
         ? DateTime.fromMillisecondsSinceEpoch(
-            positionMap['timestamp'].toInt(),
+            (positionMap['timestamp'] as num).toInt(),
             isUtc: true,
           )
         : null;
 
     return Position(
-      latitude: positionMap['latitude'],
-      longitude: positionMap['longitude'],
+      latitude: _toDouble(positionMap['latitude']),
+      longitude: _toDouble(positionMap['longitude']),
       timestamp: timestamp,
-      altitude: positionMap['altitude'] ?? 0.0,
-      accuracy: positionMap['accuracy'] ?? 0.0,
-      heading: positionMap['heading'] ?? 0.0,
-      floor: positionMap['floor'],
-      speed: positionMap['speed'] ?? 0.0,
-      speedAccuracy: positionMap['speed_accuracy'] ?? 0.0,
-      isMocked: positionMap['is_mocked'] ?? false,
+      altitude: _toDouble(positionMap['altitude']),
+      accuracy: _toDouble(positionMap['accuracy']),
+      heading: _toDouble(positionMap['heading']),
+      floor: _toInt(positionMap['floor']),
+      speed: _toDouble(positionMap['speed']),
+      speedAccuracy: _toDouble(positionMap['speed_accuracy']),
+      isMocked: positionMap['is_mocked'] == true,
     );
   }
 
@@ -164,4 +165,21 @@ class Position {
         'speed_accuracy': speedAccuracy,
         'is_mocked': isMocked,
       };
+}
+
+double _toDouble(dynamic value) {
+  if (value is num) {
+    return value.toDouble();
+  }
+  return 0.0;
+}
+
+int? _toInt(dynamic value) {
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  return null;
 }

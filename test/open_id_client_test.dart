@@ -80,6 +80,7 @@ void main() {
     final client = OpenIdClient(
       OpenIdApi(
         refreshPath: Uri.parse(tokenEndpoint),
+        clientId: 'test-client',
         client: MockClient((request) async {
           throw http.ClientException('offline', request.url);
         }),
@@ -120,6 +121,7 @@ void main() {
 
     final authApi = OpenIdApi(
       refreshPath: Uri.parse(tokenEndpoint),
+      clientId: 'test-client',
       client: MockClient((request) async {
         expect(
           request.bodyFields['refresh_token'],

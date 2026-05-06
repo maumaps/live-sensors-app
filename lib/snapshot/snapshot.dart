@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:live_sensors/entities/user.dart';
+import 'package:live_sensors/fidelity/fidelity_observation.dart';
 import 'package:live_sensors/geolocator/position.dart';
 import 'package:live_sensors/snapshot/measurement.dart';
 import 'package:uuid/uuid.dart';
@@ -25,14 +26,14 @@ class MeasurementsTable {
 
   factory MeasurementsTable.fromJson(Map<String, dynamic> json) {
     return MeasurementsTable(
-      json['x'],
-      json['y'],
-      json['z'],
-      json['timestamp'],
+      _doubleList(json['x']),
+      _doubleList(json['y']),
+      _doubleList(json['z']),
+      _dateTimeList(json['timestamp']),
     );
   }
 
-  add(double x, double y, double z, DateTime timestamp) {
+  void add(double x, double y, double z, DateTime timestamp) {
     this.x.add(x);
     this.y.add(y);
     this.z.add(z);
@@ -43,7 +44,8 @@ class MeasurementsTable {
         'x': x,
         'y': y,
         'z': z,
-        'timestamp': timestamp,
+        'timestamp':
+            timestamp.map((time) => time.millisecondsSinceEpoch).toList(),
       };
 
   @override
@@ -65,6 +67,7 @@ class Snapshot {
   final String userAgent;
 
   SnapshotError? error;
+  FidelityObservation? fidelityObservation;
   late DateTime? endDateTime;
   late Position? position;
 
@@ -80,6 +83,7 @@ class Snapshot {
     required this.userAgent,
     this.endDateTime,
     this.error,
+    this.fidelityObservation,
     this.position,
   });
 
@@ -95,13 +99,13 @@ class Snapshot {
     );
   }
 
-  seal(Position pos) {
+  void seal(Position pos) {
     position = pos;
     endDateTime = DateTime.now();
     _sealed = true;
   }
 
-  add(Measurement m) {
+  void add(Measurement m) {
     if (_sealed) {
       throw Error();
     }
@@ -111,9 +115,9 @@ class Snapshot {
   }
 
   factory Snapshot.fromJson(Map<String, dynamic> json) {
-    User? usr = json['user'];
-    DateTime? startDateTime = json['startDateTime'];
-    String userAgent = json['userAgent'] ?? 'Unknown';
+    final User? usr = _userFromJson(json['user']);
+    final DateTime? startDateTime = _dateTimeFromJson(json['startDateTime']);
+    String userAgent = json['userAgent']?.toString() ?? 'Unknown';
 
     if (usr == null || startDateTime == null) {
       throw ParsingError('Required properties missing');
@@ -121,16 +125,24 @@ class Snapshot {
 
     Snapshot snap = Snapshot(
       user: usr,
-      id: const Uuid().v4(),
+      id: json['id']?.toString() ?? const Uuid().v4(),
       startDateTime: startDateTime,
       userAgent: userAgent,
-      accelerometer: MeasurementsTable.fromJson(json['accelerometer']),
-      gyroscope: MeasurementsTable.fromJson(json['gyroscope']),
-      magnetometer: MeasurementsTable.fromJson(json['magnetometer']),
+      accelerometer: MeasurementsTable.fromJson(
+        Map<String, dynamic>.from(json['accelerometer'] as Map),
+      ),
+      gyroscope: MeasurementsTable.fromJson(
+        Map<String, dynamic>.from(json['gyroscope'] as Map),
+      ),
+      magnetometer: MeasurementsTable.fromJson(
+        Map<String, dynamic>.from(json['magnetometer'] as Map),
+      ),
     );
 
     if (json['error'] != null) {
-      snap.error = SnapshotError.fromMap(json['error']);
+      snap.error = SnapshotError.fromMap(
+        Map<String, dynamic>.from(json['error'] as Map),
+      );
     }
 
     if (json['position'] != null) {
@@ -138,21 +150,30 @@ class Snapshot {
     }
 
     if (json['endDateTime'] != null) {
-      snap.endDateTime = json['endDateTime'];
+      snap.endDateTime = _dateTimeFromJson(json['endDateTime']);
+    }
+
+    if (json['fidelity'] != null) {
+      snap.fidelityObservation = FidelityObservation.fromJson(
+        Map<dynamic, dynamic>.from(json['fidelity'] as Map),
+      );
     }
 
     return snap;
   }
 
   Map<String, dynamic> toJson() => {
-        'startDateTime': startDateTime,
-        'endDateTime': endDateTime,
+        'id': id,
+        'startDateTime': startDateTime.millisecondsSinceEpoch,
+        'endDateTime': endDateTime?.millisecondsSinceEpoch,
         'position': position?.toJson(),
         'user': user.id,
         'userAgent': userAgent,
         'accelerometer': accelerometer.toJson(),
         'gyroscope': gyroscope.toJson(),
         'magnetometer': magnetometer.toJson(),
+        'fidelity': fidelityObservation?.toJson(),
+        'fidelityGeolocate': fidelityObservation?.toGeolocateJson(),
         'error': error?.toJson(),
       };
 
@@ -174,4 +195,44 @@ class Snapshot {
       return super.toString();
     }
   }
+}
+
+List<double> _doubleList(dynamic value) {
+  if (value is! List) {
+    return <double>[];
+  }
+  return value.map((item) => (item as num).toDouble()).toList();
+}
+
+List<DateTime> _dateTimeList(dynamic value) {
+  if (value is! List) {
+    return <DateTime>[];
+  }
+  return value.map(_dateTimeFromJson).whereType<DateTime>().toList();
+}
+
+DateTime? _dateTimeFromJson(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is int) {
+    return DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
+  }
+  return DateTime.tryParse(value.toString());
+}
+
+User? _userFromJson(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is User) {
+    return value;
+  }
+  if (value is Map<String, dynamic>) {
+    return User.fromJson(value);
+  }
+  return User(id: value.toString());
 }
