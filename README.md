@@ -31,10 +31,8 @@ Repository have set of scripts that helps build, test, and release app.
 
 ```
 flutter pub get
-dart format --output=none --set-exit-if-changed .
-flutter analyze
-flutter test
-./scripts/build.sh
+make precommit
+make build-apk
 ```
 
 `./scripts/build.sh` creates
@@ -47,6 +45,7 @@ For local builds it comes from `git describe`.
 GitHub Actions runs formatting, analysis, tests, and Android release APK build
 on pull requests, pushes to `main`, and version tags.
 Tagged builds also publish the APK as a GitHub release asset.
+CI calls the same `make precommit` and `make build-apk` targets used locally.
 
 See [docs/ci.md](docs/ci.md) for details.
 

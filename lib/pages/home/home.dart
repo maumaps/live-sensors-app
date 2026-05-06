@@ -25,7 +25,7 @@ class HomePage extends StatelessWidget {
               onPressed: () {
                 controller.logout();
               },
-            )
+            ),
           ],
           bottom: const TabBar(
             tabs: [

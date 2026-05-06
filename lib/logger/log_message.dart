@@ -2,13 +2,13 @@ import 'package:json_annotation/json_annotation.dart';
 part 'log_message.g.dart';
 
 enum LogLevel {
-  @JsonValue("info")
+  @JsonValue('info')
   info,
 
-  @JsonValue("error")
+  @JsonValue('error')
   error,
 
-  @JsonValue("warning")
+  @JsonValue('warning')
   warning
 }
 

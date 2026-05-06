@@ -45,10 +45,12 @@ class Storage {
   Future<void> delete(Snapshot snapshot) async {
     final db = await database;
 
-    await db.delete('snapshots',
-        where: 'id = ?',
-        // Pass the id as a whereArg to prevent SQL injection.
-        whereArgs: [snapshot.id]);
+    await db.delete(
+      'snapshots',
+      where: 'id = ?',
+      // Pass the id as a whereArg to prevent SQL injection.
+      whereArgs: [snapshot.id],
+    );
   }
 
   Future<Snapshot> next() async {

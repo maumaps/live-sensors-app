@@ -1,12 +1,13 @@
 import 'package:live_sensors/logger/logger.dart';
+
+import 'api/api_client.dart';
 import 'api/errors.dart';
 import 'http_client/errors.dart';
+import 'queue/queue.dart';
 import 'snapshot/snapnshot_error.dart';
 import 'snapshot/snapshot.dart';
 import 'snapshot/snapshot_to_geojson.dart';
-import 'queue/queue.dart';
 import 'storage/storage.dart';
-import 'api/api_client.dart';
 
 class Sender {
   final Logger logger = Logger();
@@ -51,7 +52,8 @@ class Sender {
         } on BadRequestException {
           // TODO: remove this after storage implemented
           logger.error(
-              'Fail to send snapshot ${nextSnap.id}.\n Reason: Bad request');
+            'Fail to send snapshot ${nextSnap.id}.\n Reason: Bad request',
+          );
           queue.remove(nextSnap);
         } on AuthException catch (e) {
           logger.error(

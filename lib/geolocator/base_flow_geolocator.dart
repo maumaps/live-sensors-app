@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'package:geolocator/geolocator.dart' as base_flow;
-import 'geolocator.dart';
-import '../logger/logger.dart';
-import 'package:flutter/foundation.dart';
 
+import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart' as base_flow;
+
+import '../logger/logger.dart';
+import 'geolocator.dart';
 import 'position.dart';
 
 Future<base_flow.Position> requestLocationPermission() async {
@@ -35,7 +36,8 @@ Future<base_flow.Position> requestLocationPermission() async {
   if (permission == base_flow.LocationPermission.deniedForever) {
     // Permissions are denied forever, handle appropriately.
     return Future.error(
-        'Location permissions are permanently denied, we cannot request permissions.');
+      'Location permissions are permanently denied, we cannot request permissions.',
+    );
   }
 
   // When we reach here, permissions are granted and we can
@@ -66,33 +68,36 @@ class BaseFlowGeolocator implements GeoLocator {
   @override
   final int duration;
 
-  BaseFlowGeolocator(
-      {this.duration = 1, this.desiredAccuracy = LocationAccuracy.best});
+  BaseFlowGeolocator({
+    this.duration = 1,
+    this.desiredAccuracy = LocationAccuracy.best,
+  });
 
   @override
   requestPermissions() async {
-    _logger.info("Requesting permissions");
+    _logger.info('Requesting permissions');
     base_flow.Position position = await requestLocationPermission();
-    _logger.info("Permission granted");
-    _logger.info("Initial position: ${position.toString()}");
-    _logger.info("Create position stream");
+    _logger.info('Permission granted');
+    _logger.info('Initial position: ${position.toString()}');
+    _logger.info('Create position stream');
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         _locationSettings = base_flow.AndroidSettings(
-            accuracy: base_flow.LocationAccuracy.best,
-            // distanceFilter: 100,
-            intervalDuration: const Duration(seconds: 1),
-            // avoid FusedLocationProviderClient
-            forceLocationManager: true,
-            //(Optional) Set foreground notification config to keep the app alive
-            //when going to the background
-            foregroundNotificationConfig:
-                const base_flow.ForegroundNotificationConfig(
-              notificationText: "App keep tracking user location in background",
-              notificationTitle: "MylesVision tracker",
-              enableWakeLock: true,
-              enableWifiLock: true,
-            ));
+          accuracy: base_flow.LocationAccuracy.best,
+          // distanceFilter: 100,
+          intervalDuration: const Duration(seconds: 1),
+          // avoid FusedLocationProviderClient
+          forceLocationManager: true,
+          //(Optional) Set foreground notification config to keep the app alive
+          //when going to the background
+          foregroundNotificationConfig:
+              const base_flow.ForegroundNotificationConfig(
+            notificationText: 'App keep tracking user location in background',
+            notificationTitle: 'MylesVision tracker',
+            enableWakeLock: true,
+            enableWifiLock: true,
+          ),
+        );
         break;
 
       case TargetPlatform.iOS:
@@ -123,18 +128,20 @@ class BaseFlowGeolocator implements GeoLocator {
   @override
   Stream<Position> getPositionStream() {
     _connectToPositionStream();
-    return _positionStream.map((event) => Position(
-          longitude: event.longitude,
-          latitude: event.latitude,
-          timestamp: event.timestamp,
-          accuracy: event.accuracy,
-          altitude: event.altitude,
-          heading: event.heading,
-          speed: event.speed,
-          speedAccuracy: event.speedAccuracy,
-          floor: event.floor,
-          isMocked: event.isMocked,
-        ));
+    return _positionStream.map(
+      (event) => Position(
+        longitude: event.longitude,
+        latitude: event.latitude,
+        timestamp: event.timestamp,
+        accuracy: event.accuracy,
+        altitude: event.altitude,
+        heading: event.heading,
+        speed: event.speed,
+        speedAccuracy: event.speedAccuracy,
+        floor: event.floor,
+        isMocked: event.isMocked,
+      ),
+    );
   }
 
   @override
@@ -148,7 +155,8 @@ class BaseFlowGeolocator implements GeoLocator {
           return GeoLocationStatus.disabled;
         default:
           _logger.warn(
-              'Unknown GeoLocationStatus in base_flow.ServiceStatus: $event');
+            'Unknown GeoLocationStatus in base_flow.ServiceStatus: $event',
+          );
           return GeoLocationStatus.disabled;
       }
     });

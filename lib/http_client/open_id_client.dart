@@ -23,7 +23,7 @@ class OpenIdClient extends http.BaseClient {
     required this.postRefresh,
   }) : _inner = inner ?? http.Client();
 
-  static _getAuthString(Tokens tokens) {
+  static String _getAuthString(Tokens tokens) {
     String? accessToken = tokens.accessToken;
     return 'Bearer $accessToken';
   }

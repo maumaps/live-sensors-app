@@ -9,12 +9,13 @@ class SpinnerPage extends StatelessWidget {
     return const DefaultTabController(
       length: 2,
       child: Scaffold(
-          body: Center(
-        child: SpinKitPulsingGrid(
-          color: Colors.green,
-          size: 50.0,
+        body: Center(
+          child: SpinKitPulsingGrid(
+            color: Colors.green,
+            size: 50.0,
+          ),
         ),
-      )),
+      ),
     );
   }
 }

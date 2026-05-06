@@ -16,6 +16,7 @@ http.BaseRequest cloneRequest(http.BaseRequest original) {
     return _cloneNormalRequest(original);
   } else {
     throw UnimplementedError(
-        'Cannot handle yet requests of type ${original.runtimeType}');
+      'Cannot handle yet requests of type ${original.runtimeType}',
+    );
   }
 }

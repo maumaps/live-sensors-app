@@ -19,11 +19,11 @@ turf.Position toGeoJsonPosition(locator.Position pos) {
   return turf.Position(pos.longitude, pos.latitude, pos.altitude);
 }
 
-precise(double val) {
+String precise(double val) {
   return val.toStringAsPrecision(precision);
 }
 
-preciseAll(List<double> list) {
+List<String> preciseAll(List<double> list) {
   return list.map((v) => v.toStringAsPrecision(precision)).toList();
 }
 

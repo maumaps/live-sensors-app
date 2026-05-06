@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:live_sensors/entities/user.dart';
 import 'package:live_sensors/geolocator/position.dart';
 import 'package:live_sensors/snapshot/measurement.dart';
-import 'package:live_sensors/entities/user.dart';
 import 'package:uuid/uuid.dart';
+
 import 'snapnshot_error.dart';
 
 class ParsingError extends Error {
@@ -24,7 +25,11 @@ class MeasurementsTable {
 
   factory MeasurementsTable.fromJson(Map<String, dynamic> json) {
     return MeasurementsTable(
-        json['x'], json['y'], json['z'], json['timestamp']);
+      json['x'],
+      json['y'],
+      json['z'],
+      json['timestamp'],
+    );
   }
 
   add(double x, double y, double z, DateTime timestamp) {

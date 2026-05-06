@@ -6,7 +6,7 @@ class SnapshotsQueue extends SimpleState<Set<Snapshot>> {
   final Logger logger = Logger();
 
   @override
-  initState() {
+  Set<Snapshot> initState() {
     return <Snapshot>{};
   }
 

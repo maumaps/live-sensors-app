@@ -14,6 +14,8 @@ Issues found while taking over the Maumaps fork.
 - MQTT logging no longer mutates the pending queue during iteration and no
   longer assumes `connectionStatus` is always non-null while offline.
 - CI now runs format, analyzer, tests, and Android APK build.
+- CI and local development now share Makefile entrypoints for linting, tests,
+  precommit checks, and Android APK builds.
 
 ## Still open
 
@@ -40,3 +42,7 @@ Issues found while taking over the Maumaps fork.
 - `Tracker.track()` can create new subscriptions if `start()` is called more
   than once without a prior `stop()`.
   Guard repeated starts or make tracking lifecycle idempotent.
+- Dart analyzer strict mode is still deferred.
+  Enabling `strict-casts`, `strict-inference`, and `strict-raw-types` currently
+  exposes a larger JSON/parsing typing refactor.
+  Do it as a focused cleanup instead of mixing it into CI plumbing.

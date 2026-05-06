@@ -20,15 +20,17 @@ class Sensors {
   final List<Stream> _sensors = <Stream>[
     userAccelerometerEvents.map((event) => SensorEvent(event, DateTime.now())),
     gyroscopeEvents.map((event) => SensorEvent(event, DateTime.now())),
-    magnetometerEvents.map((event) => SensorEvent(event, DateTime.now()))
+    magnetometerEvents.map((event) => SensorEvent(event, DateTime.now())),
   ];
   late Stream<SensorsData> stream;
 
   Sensors() {
-    stream = StreamZip(_sensors).map((List event) => (
-          event[0],
-          event[1],
-          event[2],
-        ));
+    stream = StreamZip(_sensors).map(
+      (List event) => (
+        event[0],
+        event[1],
+        event[2],
+      ),
+    );
   }
 }

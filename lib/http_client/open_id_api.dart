@@ -21,7 +21,7 @@ class OpenIdApi {
       'username': email,
       'password': password,
       'client_id': 'kontur_platform',
-      'grant_type': 'password'
+      'grant_type': 'password',
     });
 
     final statusType = (response.statusCode / 100).floor() * 100;
@@ -44,7 +44,7 @@ class OpenIdApi {
     final response = await _postTokenRequest({
       'client_id': 'kontur_platform',
       'refresh_token': refreshToken,
-      'grant_type': 'refresh_token'
+      'grant_type': 'refresh_token',
     });
 
     final statusType = (response.statusCode / 100).floor() * 100;

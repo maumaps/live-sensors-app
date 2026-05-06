@@ -40,14 +40,15 @@ class LiveSensorsAppState extends State<LiveSensorsApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Maumaps Live Sensors',
-        theme: ThemeData(
-          primarySwatch: Colors.green,
-        ),
-        home: isReady
-            ? isLoggedIn
-                ? HomePage(controller: widget.controller)
-                : LoginPage(controller: widget.controller)
-            : const SpinnerPage());
+      title: 'Maumaps Live Sensors',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+      ),
+      home: isReady
+          ? isLoggedIn
+              ? HomePage(controller: widget.controller)
+              : LoginPage(controller: widget.controller)
+          : const SpinnerPage(),
+    );
   }
 }

@@ -1,8 +1,9 @@
 import 'dart:async';
-import 'package:live_sensors/geolocator/position.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+
 import 'package:flutter/material.dart';
 import 'package:live_sensors/controller.dart';
+import 'package:live_sensors/geolocator/position.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class StatsView extends StatefulWidget {
   final AppController controller;
@@ -77,22 +78,23 @@ class _StatsViewState extends State<StatsView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LinearProgressIndicator(
-              value: controller.value,
-              semanticsLabel: 'Linear progress indicator',
-            ),
-            const SizedBox(height: 8),
-            Text(version),
-            Text('Position updates: $positionUpdates'),
-            Text('Position accuracy: $accuracyActual ±m'),
-            Text('Position setting: $accuracySetting'),
-            Text('Sensors updates: $sensorsUpdates'),
-            Text('Snapshots sent: $snapshotsCount'),
-          ],
-        ));
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          LinearProgressIndicator(
+            value: controller.value,
+            semanticsLabel: 'Linear progress indicator',
+          ),
+          const SizedBox(height: 8),
+          Text(version),
+          Text('Position updates: $positionUpdates'),
+          Text('Position accuracy: $accuracyActual ±m'),
+          Text('Position setting: $accuracySetting'),
+          Text('Sensors updates: $sensorsUpdates'),
+          Text('Snapshots sent: $snapshotsCount'),
+        ],
+      ),
+    );
   }
 }

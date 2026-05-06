@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:live_sensors/logger/log_message.dart';
-import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:mqtt_client/mqtt_client.dart';
+import 'package:mqtt_client/mqtt_server_client.dart';
 
 class MQTTTransport {
   final port = 1883;
@@ -86,7 +87,7 @@ class MQTTTransport {
     }
   }
 
-  _publish(LogMessage msg) {
+  void _publish(LogMessage msg) {
     if (client.connectionStatus?.state != MqttConnectionState.connected) {
       _queue(msg);
       return;

@@ -2,20 +2,20 @@ import 'package:fk_user_agent/fk_user_agent.dart';
 import 'package:live_sensors/logger/logger.dart';
 import 'package:live_sensors/session_storage/session_storage.dart';
 import 'package:live_sensors/utils/state.dart';
+
+import 'api/api_client.dart';
 import 'entities/session.dart';
+import 'entities/tokens.dart';
+import 'entities/user.dart';
+import 'geolocator/base_flow_geolocator.dart';
+import 'geolocator/geolocator.dart';
 import 'http_client/errors.dart';
 import 'http_client/open_id_api.dart';
 import 'http_client/open_id_client.dart';
-import 'entities/tokens.dart';
-import 'sensors/sensors.dart';
-import 'entities/user.dart';
-import 'api/api_client.dart';
-import 'geolocator/geolocator.dart';
-import 'geolocator/base_flow_geolocator.dart';
 import 'queue/queue.dart';
-import 'storage/storage.dart';
-
 import 'sender.dart';
+import 'sensors/sensors.dart';
+import 'storage/storage.dart';
 import 'tracker.dart';
 
 class LoginFailedException implements Exception {
@@ -58,7 +58,7 @@ class AppController extends SimpleState<AppControllerState> {
         sender = Sender();
 
   @override
-  initState() {
+  AppControllerState initState() {
     return AppControllerState();
   }
 
