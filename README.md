@@ -1,7 +1,15 @@
-# Live Sensors App
+# Maumaps Live Sensors App
 
-Development
-----
+Flutter application for collecting mobile GPS and motion sensor snapshots and
+sending them to the live-sensor backend.
+
+This repository is the Maumaps fork of
+[`konturio/live-sensors-app`](https://github.com/konturio/live-sensors-app).
+The Android/iOS package identifiers are still the original `kontur.io.*`
+identifiers so existing installations can be upgraded while the fork is being
+stabilized.
+
+## Development
 
 ### Dev container 
 This project have config for [vscode dev container](https://code.visualstudio.com/docs/devcontainers/containers)
@@ -16,16 +24,31 @@ Another options is using [devbox](https://github.com/jetpack-io/devbox) tool for
 devbox install
 ```
 
-
 ### Scripts
 Repository have set of scripts that helps build, test, and release app.
 
+## Build
 
-Build
-----
 ```
-flutter build apk 
+flutter pub get
+dart format --output=none --set-exit-if-changed .
+flutter analyze
+flutter test
+./scripts/build.sh
 ```
+
+`./scripts/build.sh` creates
+`releases/live-sensors-<version>-release.apk`.
+For tagged builds the version comes from the tag name.
+For local builds it comes from `git describe`.
+
+## Continuous integration
+
+GitHub Actions runs formatting, analysis, tests, and Android release APK build
+on pull requests, pushes to `main`, and version tags.
+Tagged builds also publish the APK as a GitHub release asset.
+
+See [docs/ci.md](docs/ci.md) for details.
 
 ## Useful links
 - [Remote debugging on real device](https://dev.to/petrussola/how-to-debug-flutter-app-with-real-android-phone-693)
@@ -36,9 +59,13 @@ flutter build apk
 All top level logic described in `/main/controller.dart` module
 
 ### Initialization stage
-When app booted in try to recover previous user sessions.
-In case if success app goes to `setup` stage, else user redirected to login screen,
-and `setup` stage will executed after successful login 
+When app boots it tries to recover the previous user session.
+If stored tokens can be refreshed, the app goes to `setup` stage.
+If the auth server is unavailable, the app keeps the restored session and works
+in a degraded offline mode until refresh succeeds later.
+Only a confirmed refresh-token rejection clears the session.
+If there is no stored session, the user is redirected to the login screen, and
+`setup` runs after successful login.
 
 ### Setup stage
 During the installation process, the program requests the necessary accesses, instantiates the services
@@ -69,3 +96,7 @@ Sending snapshots from `queue` to backend
 ```
 Sensors + GPS ---(data)--> Tracker ---(Snapshot)--> Queue --> Sender --> Client --> Backend
 ```
+
+## Current backlog
+
+See [docs/todo.md](docs/todo.md) for issues found while taking over the fork.

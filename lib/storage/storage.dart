@@ -52,10 +52,6 @@ class Storage {
   }
 
   Future<Snapshot> next() async {
-    throw Error();
-    final db = await database;
-
-    final List<Map<String, dynamic>> maps =
-        await db.query('snapshots', where: 'error = ?');
+    throw UnimplementedError('Persistent snapshot replay is not implemented');
   }
 }

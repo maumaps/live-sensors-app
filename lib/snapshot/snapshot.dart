@@ -1,9 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:live_sensors/geolocator/position.dart';
 import 'package:live_sensors/snapshot/measurement.dart';
 import 'package:live_sensors/entities/user.dart';
 import 'package:uuid/uuid.dart';
 import 'snapnshot_error.dart';
-
 
 class ParsingError extends Error {
   final String message;
@@ -44,9 +44,9 @@ class MeasurementsTable {
   @override
   String toString() {
     return 'x: $x\n'
-    'y: $y\n'
-    'z: $z\n'
-    'timestamp: $timestamp';
+        'y: $y\n'
+        'z: $z\n'
+        'timestamp: $timestamp';
   }
 }
 
@@ -155,17 +155,17 @@ class Snapshot {
   String toString() {
     try {
       return 'Snapshot:\n'
-      '- id: $id\n'
-      '- user: ${user.id}\n'
-      '- userAgent:\n$userAgent\n'
-      '- error: $error\n'
-      '- accelerometer: ${accelerometer.x.length} records\n'
-      '- gyroscope: ${gyroscope.x.length} records\n'
-      '- magnetometer: ${magnetometer.x.length} records\n'
-      '- startDateTime: $startDateTime\n'
-      '- endDateTime: $endDateTime\n';
+          '- id: $id\n'
+          '- user: ${user.id}\n'
+          '- userAgent:\n$userAgent\n'
+          '- error: $error\n'
+          '- accelerometer: ${accelerometer.x.length} records\n'
+          '- gyroscope: ${gyroscope.x.length} records\n'
+          '- magnetometer: ${magnetometer.x.length} records\n'
+          '- startDateTime: $startDateTime\n'
+          '- endDateTime: $endDateTime\n';
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
       return super.toString();
     }
   }

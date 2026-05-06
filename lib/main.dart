@@ -40,7 +40,7 @@ class LiveSensorsAppState extends State<LiveSensorsApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'MylesVision',
+        title: 'Maumaps Live Sensors',
         theme: ThemeData(
           primarySwatch: Colors.green,
         ),

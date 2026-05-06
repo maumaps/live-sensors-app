@@ -8,7 +8,9 @@ class AuthException implements Exception {
 
 class AccessTokenExpiredException extends AuthException {}
 
-class RefreshTokenExpiredException extends AuthException {}
+class RefreshTokenExpiredException extends AuthException {
+  const RefreshTokenExpiredException([super.message]);
+}
 
 class TooMuchAuthAttemptsException extends AuthException {}
 
@@ -19,4 +21,3 @@ class BadCredentialsException extends AuthException {
 class AuthBackendUnavailableException extends AuthException {
   const AuthBackendUnavailableException([super.message]);
 }
-

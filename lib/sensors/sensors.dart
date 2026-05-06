@@ -3,7 +3,6 @@ import 'package:async/async.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:live_sensors/logger/logger.dart';
 
-
 typedef SensorsData = (
   SensorEvent<UserAccelerometerEvent>,
   SensorEvent<GyroscopeEvent>,

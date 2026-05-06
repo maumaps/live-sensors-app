@@ -96,6 +96,8 @@ class AppController extends SimpleState<AppControllerState> {
     if (lastTokens != null) {
       try {
         await openIdClient.loginByTokens(lastTokens);
+      } on AuthBackendUnavailableException catch (e) {
+        logger.warn('Auth server unavailable, restored offline session ($e)');
       } catch (e) {
         logger.info('Tokens expired, re-logout ($e)');
       }

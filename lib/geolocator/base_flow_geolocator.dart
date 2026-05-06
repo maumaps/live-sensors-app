@@ -1,17 +1,17 @@
 import 'dart:async';
-import 'package:geolocator/geolocator.dart' as BaseFlow;
+import 'package:geolocator/geolocator.dart' as base_flow;
 import 'geolocator.dart';
 import '../logger/logger.dart';
 import 'package:flutter/foundation.dart';
 
 import 'position.dart';
 
-Future<BaseFlow.Position> requestLocationPermission() async {
+Future<base_flow.Position> requestLocationPermission() async {
   bool serviceEnabled;
-  BaseFlow.LocationPermission permission;
+  base_flow.LocationPermission permission;
 
   // Test if location services are enabled.
-  serviceEnabled = await BaseFlow.Geolocator.isLocationServiceEnabled();
+  serviceEnabled = await base_flow.Geolocator.isLocationServiceEnabled();
   if (!serviceEnabled) {
     // Location services are not enabled don't continue
     // accessing the position and request users of the
@@ -19,10 +19,10 @@ Future<BaseFlow.Position> requestLocationPermission() async {
     return Future.error('Location services are disabled.');
   }
 
-  permission = await BaseFlow.Geolocator.checkPermission();
-  if (permission == BaseFlow.LocationPermission.denied) {
-    permission = await BaseFlow.Geolocator.requestPermission();
-    if (permission == BaseFlow.LocationPermission.denied) {
+  permission = await base_flow.Geolocator.checkPermission();
+  if (permission == base_flow.LocationPermission.denied) {
+    permission = await base_flow.Geolocator.requestPermission();
+    if (permission == base_flow.LocationPermission.denied) {
       // Permissions are denied, next time you could try
       // requesting permissions again (this is also where
       // Android's shouldShowRequestPermissionRationale
@@ -32,7 +32,7 @@ Future<BaseFlow.Position> requestLocationPermission() async {
     }
   }
 
-  if (permission == BaseFlow.LocationPermission.deniedForever) {
+  if (permission == base_flow.LocationPermission.deniedForever) {
     // Permissions are denied forever, handle appropriately.
     return Future.error(
         'Location permissions are permanently denied, we cannot request permissions.');
@@ -40,8 +40,8 @@ Future<BaseFlow.Position> requestLocationPermission() async {
 
   // When we reach here, permissions are granted and we can
   // continue accessing the position of the device.
-  return await BaseFlow.Geolocator.getCurrentPosition(
-    desiredAccuracy: BaseFlow.LocationAccuracy.best,
+  return await base_flow.Geolocator.getCurrentPosition(
+    desiredAccuracy: base_flow.LocationAccuracy.best,
   );
 }
 
@@ -52,13 +52,13 @@ class GeoLocatorError extends Error {
 
 class BaseFlowGeolocator implements GeoLocator {
   final Logger _logger = Logger();
-  // late StreamController<BaseFlow.Position> _positionStreamController;
-  late Stream<BaseFlow.Position> _positionStream;
+  // late StreamController<base_flow.Position> _positionStreamController;
+  late Stream<base_flow.Position> _positionStream;
   // StreamSubscription<Position>? _positionStreamSubscription;
-  // late StreamController<BaseFlow.ServiceStatus> _statusStreamController;
-  late Stream<BaseFlow.ServiceStatus> _statusStream;
-  // StreamSubscription<BaseFlow.ServiceStatus>? _serviceStatusStreamSubscription;
-  late BaseFlow.LocationSettings _locationSettings;
+  // late StreamController<base_flow.ServiceStatus> _statusStreamController;
+  late Stream<base_flow.ServiceStatus> _statusStream;
+  // StreamSubscription<base_flow.ServiceStatus>? _serviceStatusStreamSubscription;
+  late base_flow.LocationSettings _locationSettings;
 
   @override
   final LocationAccuracy desiredAccuracy;
@@ -72,14 +72,14 @@ class BaseFlowGeolocator implements GeoLocator {
   @override
   requestPermissions() async {
     _logger.info("Requesting permissions");
-    BaseFlow.Position position = await requestLocationPermission();
+    base_flow.Position position = await requestLocationPermission();
     _logger.info("Permission granted");
     _logger.info("Initial position: ${position.toString()}");
     _logger.info("Create position stream");
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        _locationSettings = BaseFlow.AndroidSettings(
-            accuracy: BaseFlow.LocationAccuracy.best,
+        _locationSettings = base_flow.AndroidSettings(
+            accuracy: base_flow.LocationAccuracy.best,
             // distanceFilter: 100,
             intervalDuration: const Duration(seconds: 1),
             // avoid FusedLocationProviderClient
@@ -87,7 +87,7 @@ class BaseFlowGeolocator implements GeoLocator {
             //(Optional) Set foreground notification config to keep the app alive
             //when going to the background
             foregroundNotificationConfig:
-                const BaseFlow.ForegroundNotificationConfig(
+                const base_flow.ForegroundNotificationConfig(
               notificationText: "App keep tracking user location in background",
               notificationTitle: "MylesVision tracker",
               enableWakeLock: true,
@@ -97,17 +97,17 @@ class BaseFlowGeolocator implements GeoLocator {
 
       case TargetPlatform.iOS:
       case TargetPlatform.macOS:
-        _locationSettings = BaseFlow.AppleSettings(
-          accuracy: BaseFlow.LocationAccuracy.high,
-          activityType: BaseFlow.ActivityType.fitness,
+        _locationSettings = base_flow.AppleSettings(
+          accuracy: base_flow.LocationAccuracy.high,
+          activityType: base_flow.ActivityType.fitness,
           // distanceFilter: 100,
           pauseLocationUpdatesAutomatically: true,
           // Only set to true if our app will be started up in the background.
           showBackgroundLocationIndicator: false,
         );
       default:
-        _locationSettings = const BaseFlow.LocationSettings(
-          accuracy: BaseFlow.LocationAccuracy.high,
+        _locationSettings = const base_flow.LocationSettings(
+          accuracy: base_flow.LocationAccuracy.high,
           // distanceFilter: 100,
         );
     }
@@ -115,8 +115,8 @@ class BaseFlowGeolocator implements GeoLocator {
 
   @override
   Future<String> getAccuracy() async {
-    BaseFlow.LocationAccuracyStatus accuracy =
-        await BaseFlow.Geolocator.getLocationAccuracy();
+    base_flow.LocationAccuracyStatus accuracy =
+        await base_flow.Geolocator.getLocationAccuracy();
     return accuracy.toString();
   }
 
@@ -142,13 +142,13 @@ class BaseFlowGeolocator implements GeoLocator {
     _connectToStatusStream();
     return _statusStream.map((event) {
       switch (event) {
-        case BaseFlow.ServiceStatus.enabled:
+        case base_flow.ServiceStatus.enabled:
           return GeoLocationStatus.enabled;
-        case BaseFlow.ServiceStatus.disabled:
+        case base_flow.ServiceStatus.disabled:
           return GeoLocationStatus.disabled;
         default:
           _logger.warn(
-              'Unknown GeoLocationStatus in BaseFlow.ServiceStatus: $event');
+              'Unknown GeoLocationStatus in base_flow.ServiceStatus: $event');
           return GeoLocationStatus.disabled;
       }
     });
@@ -157,7 +157,7 @@ class BaseFlowGeolocator implements GeoLocator {
   bool _positionStreamConnected = false;
   _connectToPositionStream() {
     if (!_positionStreamConnected) {
-      _positionStream = BaseFlow.Geolocator.getPositionStream(
+      _positionStream = base_flow.Geolocator.getPositionStream(
         locationSettings: _locationSettings,
       );
       // positionStream.pipe(_positionStreamController);
@@ -168,7 +168,7 @@ class BaseFlowGeolocator implements GeoLocator {
   bool _statusStreamConnected = false;
   _connectToStatusStream() {
     if (!_statusStreamConnected) {
-      _statusStream = BaseFlow.Geolocator.getServiceStatusStream();
+      _statusStream = base_flow.Geolocator.getServiceStatusStream();
       // statusStream.pipe(_statusStreamController);
       _statusStreamConnected = true;
     }

@@ -6,4 +6,3 @@ typedef Measurement = (
   SensorEvent<GyroscopeEvent>,
   SensorEvent<MagnetometerEvent>,
 );
-

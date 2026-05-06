@@ -1,4 +1,3 @@
-
 class SimpleState<S> {
   final List<Function> _listeners = <Function>[];
   late S state;

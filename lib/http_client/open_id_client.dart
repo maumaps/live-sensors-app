@@ -48,18 +48,22 @@ class OpenIdClient extends http.BaseClient {
   /// Debounce update token requests.
   /// All request that comes when update request active - wait this request
   /// Instead of create new one
-  Future? _updateTokensActiveRequest;
-  _tokensUpdated() async {
+  Future<Tokens>? _updateTokensActiveRequest;
+  Future<Tokens> _tokensUpdated() {
     if (_updateTokensActiveRequest != null) {
-      return _updateTokensActiveRequest;
-    } else {
-      String? refreshToken = tokens?.refreshToken;
-      if (refreshToken != null) {
-        _updateTokensActiveRequest = _updateTokens(refreshToken);
-      } else {
-        throw ErrorDescription('Refresh token missing');
-      }
+      return _updateTokensActiveRequest!;
     }
+
+    final refreshToken = _tokens?.refreshToken;
+    if (refreshToken == null) {
+      throw ErrorDescription('Refresh token missing');
+    }
+
+    _updateTokensActiveRequest = _updateTokens(refreshToken).whenComplete(() {
+      _updateTokensActiveRequest = null;
+    });
+
+    return _updateTokensActiveRequest!;
   }
 
   Future<Tokens> _updateTokens(refreshToken) async {
@@ -94,9 +98,6 @@ class OpenIdClient extends http.BaseClient {
         tokens = await _tokensUpdated();
         return send(cloneRequest(request), attempt: attempt + 1);
       }
-    } on TooMuchAuthAttemptsException {
-      logout();
-      rethrow;
     }
   }
 
@@ -110,8 +111,14 @@ class OpenIdClient extends http.BaseClient {
   }
 
   loginByTokens(Tokens t) async {
-    await _updateTokens(t.refreshToken);
-    _postLogin(t);
+    try {
+      final refreshedTokens = await _updateTokens(t.refreshToken);
+      _postLogin(refreshedTokens);
+    } on AuthBackendUnavailableException {
+      tokens = t;
+      _postLogin(t);
+      rethrow;
+    }
   }
 
   _postLogin(Tokens tokens) {
@@ -128,9 +135,23 @@ class OpenIdClient extends http.BaseClient {
   /// Refresh cycle allow us update token before 401 error happens
   Timer? preRefresh;
   startRefreshCycle() async {
+    stopRefreshCycle();
     // TODO - read duration from token;
-    preRefresh = Timer.periodic(const Duration(minutes: 3), (timer) {
-      _tokensUpdated();
+    preRefresh = Timer.periodic(const Duration(minutes: 3), (timer) async {
+      try {
+        await _tokensUpdated();
+      } catch (error, stackTrace) {
+        if (error is! AuthBackendUnavailableException) {
+          FlutterError.reportError(
+            FlutterErrorDetails(
+              exception: error,
+              stack: stackTrace,
+              library: 'live_sensors auth client',
+              context: ErrorDescription('refreshing OpenID tokens'),
+            ),
+          );
+        }
+      }
     });
   }
 

@@ -8,8 +8,6 @@ import 'sensors/sensors.dart';
 import 'snapshot/snapshot.dart';
 import 'entities/user.dart';
 
-
-
 class Tracker {
   final Logger logger = Logger();
   late SnapshotsQueue queue;

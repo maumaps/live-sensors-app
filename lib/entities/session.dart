@@ -6,7 +6,10 @@ class Session {
   Session({this.tokens});
 
   factory Session.fromJson(Map<String, dynamic> json) {
-    return Session(tokens: Tokens.fromJson(json['tokens']));
+    final tokenJson = json['tokens'];
+    return Session(
+      tokens: tokenJson == null ? null : Tokens.fromJson(tokenJson),
+    );
   }
 
   Map<String, dynamic> toJson() => {

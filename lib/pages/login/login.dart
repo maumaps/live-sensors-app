@@ -85,6 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                               passwordController.value.text,
                             );
                           } on LoginFailedException catch (e) {
+                            if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -93,6 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             );
                           } catch (e) {
+                            if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
