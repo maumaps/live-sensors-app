@@ -96,6 +96,10 @@ Sending snapshots from `queue` to backend
 Sensors + GPS ---(data)--> Tracker ---(Snapshot)--> Queue --> Sender --> Client --> Backend
 ```
 
+See [docs/application-flow.md](docs/application-flow.md) for a fuller
+contributor-oriented walkthrough of startup, login, tracking, sending, offline
+behavior, and mobile permissions.
+
 ## Current backlog
 
 See [docs/todo.md](docs/todo.md) for issues found while taking over the fork.
