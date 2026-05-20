@@ -68,6 +68,7 @@ class Snapshot {
 
   SnapshotError? error;
   FidelityObservation? fidelityObservation;
+  Future<void> readyToSend = Future<void>.value();
   late DateTime? endDateTime;
   late Position? position;
 

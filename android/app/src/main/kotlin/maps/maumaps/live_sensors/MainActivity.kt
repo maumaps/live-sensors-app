@@ -268,18 +268,15 @@ class MainActivity: FlutterActivity() {
     }
 
     private fun cellTower(cellInfo: CellInfo): Map<String, Any>? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && cellInfo is CellInfoNr) {
+            return nrCell(cellInfo.cellIdentity as CellIdentityNr, cellInfo.cellSignalStrength)
+        }
+
         return when (cellInfo) {
             is CellInfoGsm -> gsmCell(cellInfo.cellIdentity, cellInfo.cellSignalStrength)
             is CellInfoWcdma -> wcdmaCell(cellInfo.cellIdentity, cellInfo.cellSignalStrength)
             is CellInfoLte -> lteCell(cellInfo.cellIdentity, cellInfo.cellSignalStrength)
             is CellInfoCdma -> cdmaCell(cellInfo.cellIdentity, cellInfo.cellSignalStrength)
-            is CellInfoNr -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    nrCell(cellInfo.cellIdentity as CellIdentityNr, cellInfo.cellSignalStrength)
-                } else {
-                    null
-                }
-            }
             else -> null
         }
     }
@@ -290,8 +287,10 @@ class MainActivity: FlutterActivity() {
     ): Map<String, Any>? {
         return cellMap("gsm", identity.mcc, identity.mnc, identity.lac, identity.cid).apply {
             putSignal(signalStrength)
-            putValid("arfcn", identity.arfcn)
-            putValid("bsic", identity.bsic)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                putValid("arfcn", identity.arfcn)
+                putValid("bsic", identity.bsic)
+            }
         }.takeIf { it.hasRequiredCellIds() }
     }
 
@@ -302,7 +301,9 @@ class MainActivity: FlutterActivity() {
         return cellMap("wcdma", identity.mcc, identity.mnc, identity.lac, identity.cid).apply {
             putSignal(signalStrength)
             putValid("psc", identity.psc)
-            putValid("uarfcn", identity.uarfcn)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                putValid("uarfcn", identity.uarfcn)
+            }
         }.takeIf { it.hasRequiredCellIds() }
     }
 
@@ -313,7 +314,9 @@ class MainActivity: FlutterActivity() {
         return cellMap("lte", identity.mcc, identity.mnc, identity.tac, identity.ci).apply {
             putSignal(signalStrength)
             putValid("pci", identity.pci)
-            putValid("earfcn", identity.earfcn)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                putValid("earfcn", identity.earfcn)
+            }
         }.takeIf { it.hasRequiredCellIds() }
     }
 
@@ -375,10 +378,19 @@ class MainActivity: FlutterActivity() {
     }
 
     private fun Map<String, Any>.hasRequiredCellIds(): Boolean {
-        return this["mobileCountryCode"] != Int.MAX_VALUE &&
-            this["mobileNetworkCode"] != Int.MAX_VALUE &&
-            this["locationAreaCode"] != Int.MAX_VALUE &&
-            this["cellId"] != Int.MAX_VALUE
+        return hasRequiredCellValue("mobileCountryCode") &&
+            hasRequiredCellValue("mobileNetworkCode") &&
+            hasRequiredCellValue("locationAreaCode") &&
+            hasRequiredCellValue("cellId")
+    }
+
+    private fun Map<String, Any>.hasRequiredCellValue(key: String): Boolean {
+        return when (val value = this[key]) {
+            is Int -> value != Int.MAX_VALUE && value != Int.MIN_VALUE && value >= 0
+            is Long -> value != Long.MAX_VALUE && value != Long.MIN_VALUE && value >= 0
+            is String -> value.isNotBlank()
+            else -> false
+        }
     }
 
     private fun channelFromFrequency(frequency: Int): Int? {

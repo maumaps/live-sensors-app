@@ -57,6 +57,13 @@ class Sender {
     while (!isStopped) {
       try {
         Snapshot nextSnap = queue.next();
+        await nextSnap.readyToSend;
+        if (isStopped) {
+          break;
+        }
+        if (!queue.state.contains(nextSnap)) {
+          continue;
+        }
         try {
           final json = snapshotToGeoJson(nextSnap).toJson();
           await api.sendSnapshot(json);

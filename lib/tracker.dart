@@ -26,6 +26,7 @@ class Tracker {
   StreamSubscription<Position>? positionSubscription;
   Future<void> positionProcessing = Future<void>.value();
   int _runGeneration = 0;
+  final Set<Snapshot> _pendingFidelitySnapshots = <Snapshot>{};
 
   Tracker();
 
@@ -76,19 +77,14 @@ class Tracker {
       snap = Snapshot.init(user, userAgent);
       skip = isPaused;
 
-      positionProcessing = positionProcessing.then((_) async {
-        try {
-          sealedSnapshot.fidelityObservation =
-              await fidelityCollector?.collect(event);
-        } catch (e) {
-          logger.warn('Failed to collect fidelity observation: $e');
-        }
-
-        if (isStopped || runGeneration != _runGeneration) {
-          return;
-        }
-        queue.add(sealedSnapshot);
-      });
+      _pendingFidelitySnapshots.add(sealedSnapshot);
+      final Future<void> readyToSend =
+          _attachFidelityObservation(sealedSnapshot, event, runGeneration);
+      sealedSnapshot.readyToSend = readyToSend;
+      queue.add(sealedSnapshot);
+      positionProcessing = Future.wait<void>(
+        _pendingFidelitySnapshots.map((snapshot) => snapshot.readyToSend),
+      );
     });
 
     if (isPaused) {
@@ -121,9 +117,29 @@ class Tracker {
     sensorsSubscription = null;
     positionSubscription = null;
     positionProcessing = Future<void>.value();
+    for (final snapshot in _pendingFidelitySnapshots.toList()) {
+      queue.remove(snapshot);
+    }
 
     await sensorsToCancel?.cancel();
     await positionToCancel?.cancel();
     await processingToAwait;
+  }
+
+  Future<void> _attachFidelityObservation(
+    Snapshot snapshot,
+    Position position,
+    int runGeneration,
+  ) async {
+    try {
+      snapshot.fidelityObservation = await fidelityCollector?.collect(position);
+    } catch (e) {
+      logger.warn('Failed to collect fidelity observation: $e');
+    } finally {
+      _pendingFidelitySnapshots.remove(snapshot);
+      if (isStopped || runGeneration != _runGeneration) {
+        queue.remove(snapshot);
+      }
+    }
   }
 }

@@ -68,6 +68,37 @@ void main() {
     await sensors.close();
     await positions.close();
   });
+
+  test('Tracker queues snapshots before delayed fidelity collection completes',
+      () async {
+    final queue = SnapshotsQueue();
+    final sensors = StreamController<SensorsData>();
+    final positions = StreamController<Position>();
+    final fidelity = _DelayedFidelityCollector();
+    final tracker = Tracker()
+      ..setup(
+        user: User(id: 'user'),
+        userAgent: 'agent',
+        queue: queue,
+        sensors: sensors.stream,
+        position: positions.stream,
+        fidelityCollector: fidelity,
+      );
+
+    tracker.track();
+    positions.add(_position());
+    positions.add(_position());
+    await fidelity.started.future;
+    await Future<void>.delayed(Duration.zero);
+
+    expect(queue.state, hasLength(2));
+
+    fidelity.complete();
+    await tracker.positionProcessing;
+    await tracker.dispose();
+    await sensors.close();
+    await positions.close();
+  });
 }
 
 Position _position() => Position(
@@ -91,7 +122,9 @@ class _DelayedFidelityCollector extends FidelityCollector {
 
   @override
   Future<FidelityObservation> collect(Position position) async {
-    started.complete();
+    if (!started.isCompleted) {
+      started.complete();
+    }
     await _complete.future;
     return FidelityObservation(
       time: DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true),

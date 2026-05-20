@@ -60,6 +60,7 @@ class FidelityCollector {
     return rows
         .whereType<Map<dynamic, dynamic>>()
         .map(FidelityCellTower.fromJson)
+        .where((tower) => tower.hasRequiredGeolocateFields)
         .toList();
   }
 

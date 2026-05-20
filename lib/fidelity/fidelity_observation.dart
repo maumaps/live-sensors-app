@@ -96,6 +96,12 @@ class FidelityCellTower {
     );
   }
 
+  bool get hasRequiredGeolocateFields =>
+      mobileCountryCode != null &&
+      mobileNetworkCode != null &&
+      locationAreaCode != null &&
+      cellId != null;
+
   Map<String, dynamic> toGeolocateJson() => _withoutNulls({
         'radioType': radioType,
         'mobileCountryCode': mobileCountryCode,

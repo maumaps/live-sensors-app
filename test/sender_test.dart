@@ -85,10 +85,73 @@ void main() {
     sender.stop();
     await sending;
   });
+
+  test('Sender waits for queued snapshots in insertion order', () async {
+    final firstReady = Completer<void>();
+    final secondReady = Completer<void>()..complete();
+    final first = Snapshot.init(User(id: 'user'), 'agent')
+      ..seal(_position(longitude: 1))
+      ..readyToSend = firstReady.future;
+    final second = Snapshot.init(User(id: 'user'), 'agent')
+      ..seal(_position(longitude: 2))
+      ..readyToSend = secondReady.future;
+    final queue = SnapshotsQueue()
+      ..add(first)
+      ..add(second);
+    final api = _SuccessfulApiClient();
+    final sender = Sender()
+      ..setup(
+        api: api,
+        queue: queue,
+        storage: _ThrowingStorage(),
+        user: User(id: 'user'),
+      );
+
+    final sending = sender.sendSnapshotsFromQueue();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(api.sentLongitudes, isEmpty);
+
+    firstReady.complete();
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(api.sentLongitudes, ['1.00', '2.00']);
+
+    sender.stop();
+    await sending;
+  });
+
+  test('Sender skips snapshots removed while waiting for readiness', () async {
+    final ready = Completer<void>();
+    final snapshot = Snapshot.init(User(id: 'user'), 'agent')
+      ..seal(_position())
+      ..readyToSend = ready.future;
+    final queue = SnapshotsQueue()..add(snapshot);
+    final api = _SuccessfulApiClient();
+    final sender = Sender()
+      ..setup(
+        api: api,
+        queue: queue,
+        storage: _ThrowingStorage(),
+        user: User(id: 'user'),
+      );
+
+    final sending = sender.sendSnapshotsFromQueue();
+    await Future<void>.delayed(Duration.zero);
+    queue.remove(snapshot);
+    ready.complete();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(api.calls, 0);
+
+    sender.stop();
+    await sending;
+  });
 }
 
-Position _position() => Position(
-      longitude: 1,
+Position _position({double longitude = 1}) => Position(
+      longitude: longitude,
       latitude: 2,
       timestamp: DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true),
       accuracy: 3,
@@ -116,6 +179,7 @@ class _ThrowingApiClient extends ApiClient {
 
 class _SuccessfulApiClient extends ApiClient {
   int calls = 0;
+  final List<String?> sentLongitudes = <String?>[];
 
   _SuccessfulApiClient()
       : super(
@@ -126,6 +190,10 @@ class _SuccessfulApiClient extends ApiClient {
   @override
   Future<void> sendSnapshot(Map<String, dynamic> payload) async {
     calls++;
+    final features = payload['features'] as List<dynamic>;
+    final feature = features.single as Map<String, dynamic>;
+    final properties = feature['properties'] as Map<String, dynamic>;
+    sentLongitudes.add(properties['lng'] as String?);
   }
 }
 

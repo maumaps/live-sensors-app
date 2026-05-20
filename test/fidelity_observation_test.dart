@@ -175,6 +175,29 @@ void main() {
       snapshot.fidelityObservation?.toJson(),
     );
   });
+
+  test('FidelityCellTower marks incomplete tower rows invalid', () {
+    expect(
+      FidelityCellTower.fromJson({
+        'radioType': 'nr',
+        'mobileCountryCode': '',
+        'mobileNetworkCode': '01',
+        'locationAreaCode': 100,
+        'cellId': 200,
+      }).hasRequiredGeolocateFields,
+      isFalse,
+    );
+    expect(
+      FidelityCellTower.fromJson({
+        'radioType': 'nr',
+        'mobileCountryCode': '282',
+        'mobileNetworkCode': '01',
+        'locationAreaCode': 100,
+        'cellId': 200,
+      }).hasRequiredGeolocateFields,
+      isTrue,
+    );
+  });
 }
 
 Position _position() {
