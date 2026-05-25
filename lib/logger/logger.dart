@@ -12,14 +12,15 @@ class Logger {
   factory Logger() => _singleton;
   Logger._internal();
 
-  init() async {
+  Future<void> init() async {
     await client.init('live_sensors_app');
   }
 
   final List<LogMessage> _records = <LogMessage>[];
-  final List<Function> _listeners = <Function>[];
+  final List<void Function(List<LogMessage>)> _listeners =
+      <void Function(List<LogMessage>)>[];
 
-  _add(LogMessage record) {
+  void _add(LogMessage record) {
     if (_records.length > historyLength) {
       _records.removeAt(0);
     }
@@ -28,25 +29,25 @@ class Logger {
     _update();
   }
 
-  _update() {
+  void _update() {
     for (final listener in _listeners) {
       listener(_records);
     }
   }
 
-  info(String msg) {
+  void info(String msg) {
     _add(LogMessage(level: LogLevel.info, message: msg));
   }
 
-  warn(String msg) {
+  void warn(String msg) {
     _add(LogMessage(level: LogLevel.warning, message: msg));
   }
 
-  error(String msg) {
+  void error(String msg) {
     _add(LogMessage(level: LogLevel.error, message: msg));
   }
 
-  Function subscribe(void Function(List<LogMessage>) listener) {
+  void Function() subscribe(void Function(List<LogMessage>) listener) {
     _listeners.add(listener);
     Future(() => listener(_records));
     return () {

@@ -1,4 +1,5 @@
 import 'package:fk_user_agent/fk_user_agent.dart';
+import 'package:live_sensors/app_config.dart';
 import 'package:live_sensors/logger/logger.dart';
 import 'package:live_sensors/session_storage/session_storage.dart';
 import 'package:live_sensors/utils/state.dart';
@@ -7,6 +8,7 @@ import 'api/api_client.dart';
 import 'entities/session.dart';
 import 'entities/tokens.dart';
 import 'entities/user.dart';
+import 'fidelity/fidelity_collector.dart';
 import 'geolocator/base_flow_geolocator.dart';
 import 'geolocator/geolocator.dart';
 import 'http_client/errors.dart';
@@ -49,13 +51,15 @@ class AppController extends SimpleState<AppControllerState> {
 
   /* Sends snapshots from queue */
   final Sender sender;
+  final FidelityCollector fidelityCollector;
 
   AppController()
       : sensors = Sensors(),
         geoLocator = BaseFlowGeolocator(),
         queue = SnapshotsQueue(),
         tracker = Tracker(),
-        sender = Sender();
+        sender = Sender(),
+        fidelityCollector = const FidelityCollector();
 
   @override
   AppControllerState initState() {
@@ -63,15 +67,21 @@ class AppController extends SimpleState<AppControllerState> {
   }
 
   // Create common application structure
-  init() async {
+  Future<void> init() async {
     await logger.init();
+    await storage.init();
     SessionStorage sessionStorage = SessionStorage();
     Session session = Session();
 
     openIdClient = OpenIdClient(
       OpenIdApi(
-        refreshPath: Uri.parse(
-          'https://keycloak01.kontur.io/realms/kontur/protocol/openid-connect/token',
+        refreshPath: _configuredUri(
+          AppConfig.openIdTokenUrl,
+          'LIVE_SENSORS_OPENID_TOKEN_URL',
+        ),
+        clientId: _configuredValue(
+          AppConfig.openIdClientId,
+          'LIVE_SENSORS_OPENID_CLIENT_ID',
         ),
       ),
       postLogin: (tokens) {
@@ -107,7 +117,18 @@ class AppController extends SimpleState<AppControllerState> {
     });
   }
 
-  login(String login, String password) async {
+  Uri _configuredUri(String value, String name) {
+    return Uri.parse(_configuredValue(value, name));
+  }
+
+  String _configuredValue(String value, String name) {
+    if (value.isEmpty) {
+      throw StateError('$name must be provided with --dart-define.');
+    }
+    return value;
+  }
+
+  Future<void> login(String login, String password) async {
     try {
       await openIdClient.loginByPassword(email: login, password: password);
     } on BadCredentialsException catch (e) {
@@ -115,7 +136,7 @@ class AppController extends SimpleState<AppControllerState> {
     }
   }
 
-  _postLogin(Tokens tokens) async {
+  Future<void> _postLogin(Tokens tokens) async {
     User user = User(id: tokens.sessionId);
     try {
       setState(() {
@@ -128,13 +149,15 @@ class AppController extends SimpleState<AppControllerState> {
     }
   }
 
-  setup(User user) async {
+  Future<void> setup(User user) async {
     try {
       await geoLocator.requestPermissions();
+      await fidelityCollector.requestPermissions();
       sender.setup(
         api: api,
         storage: storage,
         queue: queue,
+        user: user,
       );
 
       await FkUserAgent.init();
@@ -146,24 +169,25 @@ class AppController extends SimpleState<AppControllerState> {
         queue: queue,
         sensors: sensors.stream,
         position: geoLocator.getPositionStream(),
+        fidelityCollector: fidelityCollector,
       );
     } catch (e) {
       logger.error(e.toString());
     }
   }
 
-  logout() {
+  void logout() {
     openIdClient.logout();
   }
 
-  _postLogout() {
+  void _postLogout() {
     stop();
     setState(() {
       state.isAuthorized = false;
     });
   }
 
-  start() {
+  void start() {
     tracker.track();
     sender.run();
     setState(() {
@@ -171,7 +195,7 @@ class AppController extends SimpleState<AppControllerState> {
     });
   }
 
-  stop() {
+  void stop() {
     tracker.dispose();
     queue.clear();
     sender.stop();
@@ -180,14 +204,14 @@ class AppController extends SimpleState<AppControllerState> {
     });
   }
 
-  pause() {
+  void pause() {
     tracker.pause();
     setState(() {
       state.isTracking = false;
     });
   }
 
-  resume() {
+  void resume() {
     tracker.resume();
     setState(() {
       state.isTracking = true;

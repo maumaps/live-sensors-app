@@ -8,10 +8,14 @@ import 'errors.dart';
 
 class OpenIdApi {
   final Uri refreshPath;
+  final String clientId;
   final http.Client _client;
 
-  OpenIdApi({required this.refreshPath, http.Client? client})
-      : _client = client ?? http.Client();
+  OpenIdApi({
+    required this.refreshPath,
+    required this.clientId,
+    http.Client? client,
+  }) : _client = client ?? http.Client();
 
   Future<Tokens> login({
     required String email,
@@ -20,7 +24,7 @@ class OpenIdApi {
     final response = await _postTokenRequest({
       'username': email,
       'password': password,
-      'client_id': 'kontur_platform',
+      'client_id': clientId,
       'grant_type': 'password',
     });
 
@@ -29,9 +33,9 @@ class OpenIdApi {
       case 200:
         return _parseTokens(response.body);
       case 400:
-        final json = jsonDecode(response.body);
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
         throw BadCredentialsException(
-          json['error_description'] ?? 'Unknown error',
+          json['error_description']?.toString() ?? 'Unknown error',
         );
       case 300:
       case 500:
@@ -42,7 +46,7 @@ class OpenIdApi {
 
   Future<Tokens> refreshTokens(String refreshToken) async {
     final response = await _postTokenRequest({
-      'client_id': 'kontur_platform',
+      'client_id': clientId,
       'refresh_token': refreshToken,
       'grant_type': 'refresh_token',
     });
@@ -52,9 +56,10 @@ class OpenIdApi {
       case 200:
         return _parseTokens(response.body);
       case 400:
-        final json = jsonDecode(response.body);
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
         final error = json['error'];
-        final description = json['error_description'] ?? 'Refresh failed';
+        final description =
+            json['error_description']?.toString() ?? 'Refresh failed';
         if (error == 'invalid_grant') {
           throw RefreshTokenExpiredException(description);
         }
@@ -79,13 +84,13 @@ class OpenIdApi {
   }
 
   Tokens _parseTokens(String responseBody) {
-    final json = jsonDecode(responseBody);
+    final json = jsonDecode(responseBody) as Map<String, dynamic>;
     return Tokens(
-      sessionId: json['session_state'],
-      expiresIn: json['expires_in'],
-      refreshExpiresIn: json['refresh_expires_in'],
-      refreshToken: json['refresh_token'],
-      accessToken: json['access_token'],
+      sessionId: json['session_state'] as String,
+      expiresIn: json['expires_in'] as int,
+      refreshExpiresIn: json['refresh_expires_in'] as int,
+      refreshToken: json['refresh_token'] as String,
+      accessToken: json['access_token'] as String,
     );
   }
 }

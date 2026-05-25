@@ -25,7 +25,7 @@ class _StatsViewState extends State<StatsView> with TickerProviderStateMixin {
   late AnimationController controller;
 
   @override
-  initState() {
+  void initState() {
     controller = AnimationController(
       /// [AnimationController]s can be created with `vsync: this` because of
       /// [TickerProviderStateMixin].
@@ -60,7 +60,7 @@ class _StatsViewState extends State<StatsView> with TickerProviderStateMixin {
     });
   }
 
-  readVersion() async {
+  Future<void> readVersion() async {
     WidgetsFlutterBinding.ensureInitialized();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     setState(() {

@@ -16,33 +16,30 @@ Issues found while taking over the Maumaps fork.
 - CI now runs format, analyzer, tests, and Android APK build.
 - CI and local development now share Makefile entrypoints for linting, tests,
   precommit checks, and Android APK builds.
+- Snapshots now include fidelity-compatible GPS and Android Wi-Fi observations.
+- Android 13+ Wi-Fi observations now request the `NEARBY_WIFI_DEVICES`
+  permission instead of silently returning empty scan results.
+- Snapshot queueing is FIFO and fidelity enrichment is serialized, so async
+  Wi-Fi collection cannot reorder GPS snapshots.
+- Failed transient sends are persisted to SQLite and replayed after restarts.
+- Stored snapshot replay drops malformed SQLite payload rows and continues with
+  the next row instead of letting one bad row block all offline replay.
+- MQTT remote logs are disabled by default and configurable through
+  `--dart-define` instead of using a hard-coded public broker.
+- The committed `device.crt`, `client.key`, and `ca.pem` app assets were
+  removed from the package.
+- Backend and OpenID token endpoints are build-time configuration, not Kontur
+  runtime defaults.
+- Android and iOS package identifiers now use Maumaps identifiers.
+- Android release signing supports a Maumaps keystore through Gradle
+  properties or environment variables; debug release signing must be requested
+  explicitly for non-production CI/dev artifacts.
+- Dart analyzer strict mode is enabled and the existing JSON/parsing typing
+  issues were cleaned up.
+- Android fidelity collection now includes Wi-Fi, cell towers, and a short BLE
+  beacon scan with explicit runtime permission handling.
 
 ## Still open
 
-- Snapshot storage is stubbed out.
-  `Sender.sendSnapshotsFromStorage()` is disabled, so app restarts can lose
-  queued sensor snapshots.
-  This is the next important offline reliability fix.
-- MQTT logging uses a hard-coded public broker endpoint and unauthenticated
-  port `1883`.
-  Decide whether Maumaps still needs remote MQTT app logs, then move endpoint
-  and credentials into build-time configuration.
-- `device.crt`, `client.key`, and `ca.pem` are committed and packaged as app
-  assets.
-  Audit whether they are test credentials, rotate them if they were ever real,
-  and replace the pattern with environment-specific provisioning.
-- Backend and Keycloak URLs are hard-coded to Kontur infrastructure.
-  Maumaps deployments should use flavor or build-time configuration before any
-  public release.
-- The Android release build still uses the debug signing config.
-  Configure a real signing key before distributing production APKs.
-- Android and iOS package identifiers still use `kontur.io.*`.
-  Keep them only if upgrade compatibility with existing installs is required;
-  otherwise migrate to Maumaps identifiers deliberately.
-- `Tracker.track()` can create new subscriptions if `start()` is called more
-  than once without a prior `stop()`.
-  Guard repeated starts or make tracking lifecycle idempotent.
-- Dart analyzer strict mode is still deferred.
-  Enabling `strict-casts`, `strict-inference`, and `strict-raw-types` currently
-  exposes a larger JSON/parsing typing refactor.
-  Do it as a focused cleanup instead of mixing it into CI plumbing.
+- Validate Android Wi-Fi, BLE, and cell tower collection on real field devices
+  before treating the radio payload quality as production-calibrated.

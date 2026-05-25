@@ -2,21 +2,21 @@ import 'package:live_sensors/logger/logger.dart';
 import 'package:live_sensors/snapshot/snapshot.dart';
 import 'package:live_sensors/utils/state.dart';
 
-class SnapshotsQueue extends SimpleState<Set<Snapshot>> {
+class SnapshotsQueue extends SimpleState<List<Snapshot>> {
   final Logger logger = Logger();
 
   @override
-  Set<Snapshot> initState() {
-    return <Snapshot>{};
+  List<Snapshot> initState() {
+    return <Snapshot>[];
   }
 
-  add(Snapshot snapshot) {
+  void add(Snapshot snapshot) {
     setState(() {
       state.add(snapshot);
     });
   }
 
-  remove(Snapshot snapshot) {
+  void remove(Snapshot snapshot) {
     setState(() {
       state.remove(snapshot);
     });
@@ -26,7 +26,7 @@ class SnapshotsQueue extends SimpleState<Set<Snapshot>> {
     return state.first;
   }
 
-  clear() {
+  void clear() {
     state.clear();
   }
 }

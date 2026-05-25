@@ -12,13 +12,15 @@ class SessionStorage {
       key: SessionStorage.key,
     );
     if (json != null) {
-      return Session.fromJson(jsonDecode(json));
+      return Session.fromJson(
+        jsonDecode(json) as Map<String, dynamic>,
+      );
     } else {
       return Session();
     }
   }
 
-  void saveSession(Session session) async {
+  Future<void> saveSession(Session session) async {
     WidgetsFlutterBinding.ensureInitialized();
     await storage.write(
       key: SessionStorage.key,
@@ -26,7 +28,7 @@ class SessionStorage {
     );
   }
 
-  dropSession() async {
+  Future<void> dropSession() async {
     await storage.delete(key: SessionStorage.key);
   }
 }

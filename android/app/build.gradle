@@ -25,8 +25,15 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
+def releaseKeystorePath = localProperties.getProperty('maumaps.releaseStoreFile') ?: System.getenv('MAUMAPS_ANDROID_KEYSTORE')
+def releaseKeystorePassword = localProperties.getProperty('maumaps.releaseStorePassword') ?: System.getenv('MAUMAPS_ANDROID_KEYSTORE_PASSWORD')
+def releaseKeyAlias = localProperties.getProperty('maumaps.releaseKeyAlias') ?: System.getenv('MAUMAPS_ANDROID_KEY_ALIAS')
+def releaseKeyPassword = localProperties.getProperty('maumaps.releaseKeyPassword') ?: System.getenv('MAUMAPS_ANDROID_KEY_PASSWORD')
+def hasReleaseSigning = releaseKeystorePath && releaseKeystorePassword && releaseKeyAlias && releaseKeyPassword
+def allowDebugReleaseSigning = (System.getenv('MAUMAPS_ALLOW_DEBUG_RELEASE_SIGNING') ?: 'false').toBoolean()
+
 android {
-    namespace "kontur.io.live_sensors"
+    namespace "maps.maumaps.live_sensors"
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
@@ -44,8 +51,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "kontur.io.live_sensors"
+        applicationId "maps.maumaps.live_sensors"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion 19
@@ -54,11 +60,26 @@ android {
         versionName flutterVersionName
     }
 
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+                storeFile file(releaseKeystorePath)
+                storePassword releaseKeystorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            } else if (allowDebugReleaseSigning) {
+                signingConfig signingConfigs.debug
+            } else {
+                throw new GradleException("Release signing is not configured. Provide Maumaps signing properties or set MAUMAPS_ALLOW_DEBUG_RELEASE_SIGNING=true for a non-production build.")
+            }
         }
     }
 }

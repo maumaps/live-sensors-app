@@ -4,58 +4,64 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:live_sensors/app_config.dart';
 import 'package:live_sensors/logger/log_message.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
 class MQTTTransport {
-  final port = 1883;
-  final mqttEndpoint = 'zigzag.kontur.io';
-  final topic = 'live-sensor-logs';
+  final port = AppConfig.mqttPort;
+  final mqttEndpoint = AppConfig.mqttEndpoint;
+  final topic = AppConfig.mqttTopic;
   final maxPendingMessages = 1000;
-  late MqttServerClient client;
+  MqttServerClient? client;
   final ListQueue<LogMessage> pendingMessages = ListQueue();
 
-  Future init(String clientId) async {
+  Future<void> init(String clientId) async {
+    if (!AppConfig.mqttLogsEnabled || mqttEndpoint.isEmpty) {
+      return;
+    }
+
     // Create the client
-    client = MqttServerClient.withPort(mqttEndpoint, clientId, port);
+    final mqttClient = MqttServerClient.withPort(mqttEndpoint, clientId, port);
+    client = mqttClient;
 
     // Setup client
-    client.secure = false;
-    client.keepAlivePeriod = 20;
-    client.setProtocolV311();
-    client.logging(on: false);
-    client.onDisconnected = _onDisconnected;
-    client.onConnected = _onConnected;
+    mqttClient.secure = true;
+    mqttClient.keepAlivePeriod = 20;
+    mqttClient.setProtocolV311();
+    mqttClient.logging(on: false);
+    mqttClient.onDisconnected = _onDisconnected;
+    mqttClient.onConnected = _onConnected;
 
     final connMess = MqttConnectMessage() //
         .withClientIdentifier(clientId)
         .startClean();
 
-    client.connectionMessage = connMess;
+    mqttClient.connectionMessage = connMess;
 
     // Connect the client
     /// Connect the client, any errors here are communicated by raising of the appropriate exception. Note
     /// in some circumstances the broker will just disconnect us, see the spec about this, we however will
     /// never send malformed messages.
     try {
-      await client.connect();
+      await mqttClient.connect();
     } on NoConnectionException catch (e) {
       // Raised by the client when connection fails.
       debugPrint('MQTT::client exception - $e');
-      client.disconnect();
+      mqttClient.disconnect();
     } on SocketException catch (e) {
       // Raised by the socket layer
       debugPrint('MQTT::socket exception - $e');
-      client.disconnect();
+      mqttClient.disconnect();
     } on Exception catch (e) {
       debugPrint('MQT::unknown exception - $e');
-      client.disconnect();
+      mqttClient.disconnect();
     }
   }
 
-  _onDisconnected() {
-    final connectionStatus = client.connectionStatus;
+  void _onDisconnected() {
+    final connectionStatus = client?.connectionStatus;
     final isSolicited = connectionStatus?.disconnectionOrigin ==
         MqttDisconnectionOrigin.solicited;
 
@@ -64,22 +70,22 @@ class MQTTTransport {
     }
   }
 
-  _onConnected() {
+  void _onConnected() {
     while (pendingMessages.isNotEmpty) {
       _publish(pendingMessages.removeFirst());
     }
   }
 
-  _queue(LogMessage msg) {
+  void _queue(LogMessage msg) {
     if (pendingMessages.length >= maxPendingMessages) {
       pendingMessages.removeFirst();
     }
     pendingMessages.add(msg);
   }
 
-  send(LogMessage msg) {
+  void send(LogMessage msg) {
     final isConnected =
-        client.connectionStatus?.state == MqttConnectionState.connected;
+        client?.connectionStatus?.state == MqttConnectionState.connected;
     if (isConnected) {
       _publish(msg);
     } else {
@@ -88,7 +94,8 @@ class MQTTTransport {
   }
 
   void _publish(LogMessage msg) {
-    if (client.connectionStatus?.state != MqttConnectionState.connected) {
+    final mqttClient = client;
+    if (mqttClient?.connectionStatus?.state != MqttConnectionState.connected) {
       _queue(msg);
       return;
     }
@@ -99,6 +106,6 @@ class MQTTTransport {
     builder.addString(jsonEncode(msg));
 
     /// Publish it
-    client.publishMessage(topic, MqttQos.exactlyOnce, builder.payload!);
+    mqttClient!.publishMessage(topic, MqttQos.exactlyOnce, builder.payload!);
   }
 }

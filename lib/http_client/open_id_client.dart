@@ -41,7 +41,7 @@ class OpenIdClient extends http.BaseClient {
     throw Error();
   }
 
-  clearTokens() {
+  void clearTokens() {
     _tokens = null;
   }
 
@@ -66,7 +66,7 @@ class OpenIdClient extends http.BaseClient {
     return _updateTokensActiveRequest!;
   }
 
-  Future<Tokens> _updateTokens(refreshToken) async {
+  Future<Tokens> _updateTokens(String refreshToken) async {
     try {
       Tokens refreshedTokens = await openIdApi.refreshTokens(refreshToken);
       tokens = refreshedTokens;
@@ -110,7 +110,7 @@ class OpenIdClient extends http.BaseClient {
     _postLogin(tokens);
   }
 
-  loginByTokens(Tokens t) async {
+  Future<void> loginByTokens(Tokens t) async {
     try {
       final refreshedTokens = await _updateTokens(t.refreshToken);
       _postLogin(refreshedTokens);
@@ -121,12 +121,12 @@ class OpenIdClient extends http.BaseClient {
     }
   }
 
-  _postLogin(Tokens tokens) {
+  void _postLogin(Tokens tokens) {
     startRefreshCycle();
     postLogin(tokens);
   }
 
-  logout() {
+  void logout() {
     clearTokens();
     stopRefreshCycle();
     postLogout();
@@ -134,7 +134,7 @@ class OpenIdClient extends http.BaseClient {
 
   /// Refresh cycle allow us update token before 401 error happens
   Timer? preRefresh;
-  startRefreshCycle() async {
+  void startRefreshCycle() {
     stopRefreshCycle();
     // TODO - read duration from token;
     preRefresh = Timer.periodic(const Duration(minutes: 3), (timer) async {
@@ -155,7 +155,7 @@ class OpenIdClient extends http.BaseClient {
     });
   }
 
-  stopRefreshCycle() {
+  void stopRefreshCycle() {
     preRefresh?.cancel();
   }
 }

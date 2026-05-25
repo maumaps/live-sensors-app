@@ -11,7 +11,7 @@ class QueueView extends StatefulWidget {
 }
 
 class _QueueViewState extends State<QueueView> {
-  Set<Snapshot> _queue = <Snapshot>{};
+  List<Snapshot> _queue = <Snapshot>[];
   late Function _unsubscribe;
 
   @override
