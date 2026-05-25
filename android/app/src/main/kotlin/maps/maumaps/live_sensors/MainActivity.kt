@@ -72,6 +72,10 @@ class MainActivity: FlutterActivity() {
 
     @SuppressLint("MissingPermission")
     private fun collectBluetoothBeacons(callback: (List<Map<String, Any>>) -> Unit) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            callback(emptyList())
+            return
+        }
         if (!hasRequiredBluetoothPermissions()) {
             callback(emptyList())
             return
